@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import React, { useCallback, useMemo, useRef, useState } from 'react'
 import Slider from '@react-native-community/slider';
 import { ThemedView } from '@/components/ThemedView';
@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Divider, Text } from '@rneui/themed';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BottomSheetModal, BottomSheetView, BottomSheetModalProvider, } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetModalProvider, BottomSheetScrollView, } from '@gorhom/bottom-sheet';
 
 
 
@@ -18,6 +18,7 @@ export default function Index() {
     const [age, setAge] = useState(20)
     const [imc, setImc] = useState(weight / ((heigth / 100) * (heigth / 100)))
     const [message, setMessage] = useState("")
+    const [loading, setLoading] = useState(false)
 
     let divider = []
     for (let i = 0; i < 16; i++) {
@@ -34,6 +35,7 @@ export default function Index() {
 
     function imcInterpreter() {
         let imcParser = parseFloat(imc.toFixed(2))
+        console.log(imcParser)
         if (imcParser < 18.5) {
             setClassification("MAGREZA")
         } else if (imcParser > 18.5 && imcParser < 24.9) {
@@ -48,54 +50,53 @@ export default function Index() {
     }
 
     async function handleGenerate() {
+        setLoading(true)
+        setImc(weight / ((heigth / 100) * (heigth / 100)))
+
         const prompt = `Tenho ${age} anos, sou do sexo ${sex} e estou tentando melhorar minha saúde e bem-estar geral. Você pode me fornecer um plano de peso com base no meu IMC atual de ${imc.toFixed(2)}, altura de ${heigth / 100} e peso de ${weight}?`
         imcInterpreter()
-        // await fetch("https://api.openai.com/v1/chat/completions", {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-type": "application/json",
-        //         Authorization: `Bearer ${process.env.EXPO_PUBLIC_GPT_API_KEY}`
-        //     },
-        //     body: JSON.stringify({
-        //         model: "gpt-3.5-turbo-0125",
-        //         messages: [
-        //             {
-        //                 role: "user",
-        //                 content: prompt
-        //             }
-        //         ],
-        //         temperature: 0.25,
-        //         max_tokens: 500,
-        //         top_p: 1
-        //     })
-        // }).then(response => response.json()).then((data) => setMessage(data.choices[0].message.content)).catch((error) => console.log(error)).finally(() => console.log("Finalizado"))
+        await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json",
+                Authorization: `Bearer ${process.env.EXPO_PUBLIC_GPT_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "gpt-3.5-turbo-0125",
+                messages: [
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                temperature: 0.25,
+                max_tokens: 500,
+                top_p: 1
+            })
+        }).then(response => response.json()).then((data) => setMessage(data.choices[0].message.content)).catch((error) => console.log(error)).finally(() => console.log("Finalizado"))
         bottomSheetModalRef.current?.present();
+        setLoading(false)
     }
+
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
 
             <View style={styles.container}>
 
-                <ThemedView style={{ paddingLeft: 10 }}>
-                    <ThemedText style={{ color: "#12193D" }} type="title">IMC <ThemedText type="subtitle" style={{ fontWeight: 200, color: "#12193D" }}>CALCULATOR</ThemedText></ThemedText>
-                </ThemedView>
+                <ThemedText style={{ color: "#12193D", marginLeft: 20, marginTop: 20 }} type="title">IMC <ThemedText type="subtitle" style={{ fontWeight: 200, color: "#12193D" }}>CALCULATOR</ThemedText></ThemedText>
                 <View style={styles.form}>
-                    <View style={{ flexDirection: 'row', gap: 50 }}>
-                        <Pressable onPress={() => setSex("male")} style={{ ...styles.button, borderWidth: sex === "male" ? 3 : 1 }}>
+                    <View style={{ flexDirection: 'row', gap: 30 }}>
+                        <Pressable onPress={() => setSex("masculino")} style={{ ...styles.button, borderWidth: sex === "masculino" ? 3 : 1 }}>
                             <MaterialCommunityIcons name='gender-male' size={60} color={"#FF9153"} />
-                            <ThemedView>
-                                <ThemedText type="default">Masculino</ThemedText>
-                            </ThemedView>
+                            <ThemedText type="default">Masculino</ThemedText>
                         </Pressable>
-                        <Pressable onPress={() => setSex("female")} style={{ ...styles.button, borderWidth: sex === "female" ? 3 : 1 }}>
+                        <Pressable onPress={() => setSex("feminino")} style={{ ...styles.button, borderWidth: sex === "feminino" ? 3 : 1 }}>
                             <MaterialCommunityIcons name='gender-female' size={60} color={"#FF3F7F"} />
-                            <ThemedView>
-                                <ThemedText type="default">Feminino</ThemedText>
-                            </ThemedView>
+                            <ThemedText type="default">Feminino</ThemedText>
                         </Pressable>
                     </View>
-                    <View style={{ borderWidth: 1, padding: 20, borderRadius: 20, borderColor: "#B3B5B9", }}>
+                    <View style={{ borderWidth: 1, padding: 20, borderRadius: 20, borderColor: "#B3B5B9", width: "90%"}}>
                         <View style={{ alignItems: "center" }}>
                             <ThemedText style={{}} type="subtitle">Altura</ThemedText>
                             <View style={{ flexDirection: "row", width: "90%", justifyContent: "space-between", marginTop: 20 }}>
@@ -130,7 +131,7 @@ export default function Index() {
                     <View style={{ width: "100%", flexDirection: "row", justifyContent: "center", gap: 10 }}>
                         <View style={styles.boxForm}>
                             <ThemedText style={{}} type="subtitle">Peso (em kg)</ThemedText>
-                            <View style={{ padding: 25, borderRadius: 20, backgroundColor: "#DCF2F1" }}>
+                            <View style={{ padding: 25, borderRadius: 20 }}>
                                 <View style={{ flexDirection: 'row', gap: 20, alignItems: "center" }}>
                                     <Pressable onPress={() => setWeight(weight - 1)}>
                                         <Text style={{ fontSize: 20, fontWeight: "bold", color: "#A4A4A5" }}>{weight - 1}</Text>
@@ -158,10 +159,15 @@ export default function Index() {
                             </View>
                         </View>
                     </View>
-
                     <Pressable style={styles.imcButton} onPress={handleGenerate}>
-                        <Text style={{ fontSize: 30, color: "white" }}>IMC</Text>
+                        {!loading && (
+                            <Text style={{ fontSize: 30, color: "white" }}>IMC</Text>
+                        )}
+                         {loading && (
+                            <ActivityIndicator size="large" color="white" />
+                        )}
                     </Pressable>
+
 
                 </View>
             </View >
@@ -174,16 +180,17 @@ export default function Index() {
                     backgroundStyle={{ backgroundColor: "#0A0F29" }}
                     enablePanDownToClose={true}
                 >
-                    <BottomSheetView style={styles.contentContainer}>
-                        <View style={{ paddingTop: 20, alignItems: "center" }}>
-                            <Text style={{ color: "white", fontSize: 20, fontWeight: 300 }}>Seu IMC e de:</Text>
+                    <BottomSheetScrollView style={styles.contentContainer}>
+                        <View style={{ paddingTop: 20, alignItems: "center", gap: 5 }}>
+                            <Text style={{ color: "white", fontSize: 20, fontWeight: 300 }}>Seu IMC é de:</Text>
                             <Text style={{ fontSize: 40, fontWeight: "bold", color: "white" }}>{imc.toFixed(2)} kg/m²</Text>
-                            <Text style={{ color: "white", fontSize: 20, fontWeight: 300 }}>({classification})</Text>
+                            <Text style={{ color: "white", fontSize: 15, fontWeight: 300 }}>{classification}</Text>
 
                         </View>
-                        <Text style={{ color: "white" }}>
-                            {message}</Text>
-                    </BottomSheetView>
+                        <View style={{ paddingHorizontal: 30, paddingVertical: 40, alignItems: "center" }}>
+                            <ThemedText style={{ color: "white" }} type="default">{message}</ThemedText>
+                        </View>
+                    </BottomSheetScrollView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>
         </GestureHandlerRootView>
@@ -243,7 +250,6 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         flex: 1,
-        alignItems: 'center',
     },
     imcButton: {
         borderRadius: 50,
