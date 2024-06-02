@@ -30,12 +30,10 @@ export default function Index() {
     const snapPoints = useMemo(() => ['50%', '75%'], []);
 
     const handleSheetChanges = useCallback((index: number) => {
-        console.log('handleSheetChanges', index);
     }, []);
 
     function imcInterpreter() {
         let imcParser = parseFloat(imc.toFixed(2))
-        console.log(imcParser)
         if (imcParser < 18.5) {
             setClassification("MAGREZA")
         } else if (imcParser > 18.5 && imcParser < 24.9) {
@@ -73,7 +71,7 @@ export default function Index() {
                 max_tokens: 500,
                 top_p: 1
             })
-        }).then(response => response.json()).then((data) => setMessage(data.choices[0].message.content)).catch((error) => console.log(error)).finally(() => console.log("Finalizado"))
+        }).then(response => response.json()).then((data) => setMessage(data.choices[0].message.content)).catch((error) => console.log(error))
         bottomSheetModalRef.current?.present();
         setLoading(false)
     }
@@ -210,7 +208,7 @@ const styles = StyleSheet.create({
         paddingVertical: 30
     },
     container: {
-        top: 60,
+        top: 50,
         flex: 1,
         fontFamily: "Roboto",
     },
