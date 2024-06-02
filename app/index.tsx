@@ -8,11 +8,17 @@ import { Divider, Text } from '@rneui/themed';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModal, BottomSheetView, BottomSheetModalProvider, } from '@gorhom/bottom-sheet';
 
+
+
 export default function Index() {
     const [sex, setSex] = useState("")
     const [heigth, setHeigth] = useState(125)
     const [weight, setWeight] = useState(50)
+    const [classification, setClassification] = useState("")
     const [age, setAge] = useState(20)
+    const [imc, setImc] = useState(weight / ((heigth / 100) * (heigth / 100)))
+    const [message, setMessage] = useState("")
+
     let divider = []
     for (let i = 0; i < 16; i++) {
         divider.push(
@@ -22,13 +28,49 @@ export default function Index() {
     const bottomSheetModalRef = useRef<BottomSheetModal>(null);
     const snapPoints = useMemo(() => ['50%', '75%'], []);
 
-    const handlePresentModalPress = useCallback(() => {
-        bottomSheetModalRef.current?.present();
-    }, []);
     const handleSheetChanges = useCallback((index: number) => {
         console.log('handleSheetChanges', index);
     }, []);
 
+    function imcInterpreter() {
+        let imcParser = parseFloat(imc.toFixed(2))
+        if (imcParser < 18.5) {
+            setClassification("MAGREZA")
+        } else if (imcParser > 18.5 && imcParser < 24.9) {
+            setClassification("NORMAL")
+        } else if (imcParser > 25 && imcParser < 29.9) {
+            setClassification("SOBREPESO")
+        } else if (imcParser > 30 && imcParser < 39.9) {
+            setClassification("OBESIDADE")
+        } else if (imcParser > 40) {
+            setClassification("OBESIDADE GRAVE")
+        }
+    }
+
+    async function handleGenerate() {
+        const prompt = `Tenho ${age} anos, sou do sexo ${sex} e estou tentando melhorar minha saúde e bem-estar geral. Você pode me fornecer um plano de peso com base no meu IMC atual de ${imc.toFixed(2)}, altura de ${heigth / 100} e peso de ${weight}?`
+        imcInterpreter()
+        // await fetch("https://api.openai.com/v1/chat/completions", {
+        //     method: "POST",
+        //     headers: {
+        //         "Content-type": "application/json",
+        //         Authorization: `Bearer ${process.env.EXPO_PUBLIC_GPT_API_KEY}`
+        //     },
+        //     body: JSON.stringify({
+        //         model: "gpt-3.5-turbo-0125",
+        //         messages: [
+        //             {
+        //                 role: "user",
+        //                 content: prompt
+        //             }
+        //         ],
+        //         temperature: 0.25,
+        //         max_tokens: 500,
+        //         top_p: 1
+        //     })
+        // }).then(response => response.json()).then((data) => setMessage(data.choices[0].message.content)).catch((error) => console.log(error)).finally(() => console.log("Finalizado"))
+        bottomSheetModalRef.current?.present();
+    }
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
@@ -69,10 +111,11 @@ export default function Index() {
                         </View>
                         <Slider
                             style={styles.slider}
+                            thumbTintColor='black'
                             minimumValue={0}
                             maximumValue={250}
                             step={1}
-                            minimumTrackTintColor="#4A4C5E"
+                            minimumTrackTintColor="#A4A4A5"
                             maximumTrackTintColor="#868B9D"
                             value={heigth}
                             onValueChange={(value) => setHeigth(value)}
@@ -87,7 +130,7 @@ export default function Index() {
                     <View style={{ width: "100%", flexDirection: "row", justifyContent: "center", gap: 10 }}>
                         <View style={styles.boxForm}>
                             <ThemedText style={{}} type="subtitle">Peso (em kg)</ThemedText>
-                            <View style={{ padding: 25, borderRadius: 20, backgroundColor: "#F1F1F3" }}>
+                            <View style={{ padding: 25, borderRadius: 20, backgroundColor: "#DCF2F1" }}>
                                 <View style={{ flexDirection: 'row', gap: 20, alignItems: "center" }}>
                                     <Pressable onPress={() => setWeight(weight - 1)}>
                                         <Text style={{ fontSize: 20, fontWeight: "bold", color: "#A4A4A5" }}>{weight - 1}</Text>
@@ -116,9 +159,10 @@ export default function Index() {
                         </View>
                     </View>
 
-                    <Pressable style={styles.imcButton} onPress={handlePresentModalPress}>
+                    <Pressable style={styles.imcButton} onPress={handleGenerate}>
                         <Text style={{ fontSize: 30, color: "white" }}>IMC</Text>
                     </Pressable>
+
                 </View>
             </View >
             <BottomSheetModalProvider>
@@ -131,7 +175,14 @@ export default function Index() {
                     enablePanDownToClose={true}
                 >
                     <BottomSheetView style={styles.contentContainer}>
-                        <Text style={{ color: "white" }}>Resultado</Text>
+                        <View style={{ paddingTop: 20, alignItems: "center" }}>
+                            <Text style={{ color: "white", fontSize: 20, fontWeight: 300 }}>Seu IMC e de:</Text>
+                            <Text style={{ fontSize: 40, fontWeight: "bold", color: "white" }}>{imc.toFixed(2)} kg/m²</Text>
+                            <Text style={{ color: "white", fontSize: 20, fontWeight: 300 }}>({classification})</Text>
+
+                        </View>
+                        <Text style={{ color: "white" }}>
+                            {message}</Text>
                     </BottomSheetView>
                 </BottomSheetModal>
             </BottomSheetModalProvider>
@@ -195,10 +246,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     imcButton: {
-        borderWidth: 1,
-        padding: 10,
         borderRadius: 50,
-        width: 100,
+        width: 90,
+        justifyContent: "center",
+        height: 90,
         alignItems: "center",
         backgroundColor: "#0A0F29"
     }
