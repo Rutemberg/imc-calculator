@@ -166,7 +166,6 @@ export default function Index() {
                         )}
                     </Pressable>
 
-
                 </View>
             </View >
             <BottomSheetModalProvider>
@@ -175,7 +174,7 @@ export default function Index() {
                     index={0}
                     snapPoints={snapPoints}
                     onChange={handleSheetChanges}
-                    backgroundStyle={{ backgroundColor: "#0A0F29" }}
+                    backgroundStyle={{ backgroundColor: "#2666CF" }}
                     enablePanDownToClose={true}
                 >
                     <BottomSheetScrollView style={styles.contentContainer}>
