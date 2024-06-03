@@ -159,7 +159,7 @@ export default function Index() {
                     </View>
                     <Pressable style={styles.imcButton} onPress={handleGenerate}>
                         {!loading && (
-                            <Text style={{ fontSize: 30, color: "white" }}>IMC</Text>
+                            <Text style={{ fontSize: 25, color: "white" }}>IMC</Text>
                         )}
                          {loading && (
                             <ActivityIndicator size="large" color="white" />
